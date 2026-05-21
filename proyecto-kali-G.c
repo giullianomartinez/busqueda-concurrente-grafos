@@ -1,12 +1,3 @@
-/*
- * INF2322 - Paralelo 1
- * Taller 1
- *
- * INTEGRANTES: Giulliano Martinez y Benjamin Huenuvil
- */
-
-
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -107,8 +98,8 @@ void lee_grafo()
 	     p = strtok(linea,";");   /* encuento el string anterior a un ; que corresponde al nodo */
              for(j=0;j<5;j++)	
 	     {	
-		nodosarecorrer[j] = atoi(p);     /* lo almaceno en el vector nodosarecorrer */
-	        printf("%d \n",nodosarecorrer[j]);
+		nodosObligatorios[j] = atoi(p);     /* lo almaceno en el vector nodosarecorrer */
+	        printf("%d \n",nodosObligatorios[j]);
 		p = strtok(NULL,";");        /* busco el sigiente ; en el string */
 	     }  
 	     i++; 
@@ -120,14 +111,13 @@ void lee_grafo()
 	     k = 0;
              while ((p =strtok(NULL,";")) != NULL)  /* busco cada nodo apuntado que está separado por ; */
 	     {
-		 grafo [j][k++]= atoi(p);    /* en la matriz grafo, dejo cada enlace del nodo */
+		 grafo[j][k++]= atoi(p);    /* en la matriz grafo, dejo cada enlace del nodo */
 	     }
 	     grafo[j][k] = -1;  /* inserto al final de la fila un -1 para indicar que no hay mas enlace */
 	   }
 	}
   }
  }
-
 
 void imprime_grafo(){
     int fila, columna;
@@ -234,14 +224,14 @@ void guardarMejorRuta(struct Ruta *actual, int numeroHebra){
     pthread_mutex_lock(&mutexMejorRuta);
 
     if(hayMejorRuta == 0 || rutaEsMejor(actual, &mejorRutaGlobal)){
-        mejorRutaGlobal->largo = actual->largo;
+        mejorRutaGlobal.largo = actual->largo;
 
         for(i = 0; i < actual->largo; i++){
-            mejorRutaGlobal->nodos[i] = actual->nodos[i];
+            mejorRutaGlobal.nodos[i] = actual->nodos[i];
         }
 
         for(i = 0; i < MAX_NODOS; i++){
-            mejorRutaGlobal->visitados[i] = actual->visitados[i];
+            mejorRutaGlobal.visitados[i] = actual->visitados[i];
         }
 
         hayMejorRuta = 1;
@@ -252,15 +242,15 @@ void guardarMejorRuta(struct Ruta *actual, int numeroHebra){
 
         printf("\n[ID hebra %d | activas %d] NUEVA MEJOR RUTA:\n",numeroHebra,hebrasActivasActuales);
 
-        for(i = 0; i < mejorRutaGlobal->largo; i++){
-            printf("%d", mejorRutaGlobal->nodos[i]);
+        for(i = 0; i < mejorRutaGlobal.largo; i++){
+            printf("%d", mejorRutaGlobal.nodos[i]);
 
-            if(i < mejorRutaGlobal->largo - 1){
+            if(i < mejorRutaGlobal.largo - 1){
                 printf(" -> ");
             }
         }
 
-        printf(" | Nodos: %d\n", mejorRutaGlobal->largo);
+        printf(" | Nodos: %d\n", mejorRutaGlobal.largo);
 
         pthread_mutex_unlock(&mutexImpresion);
     }
@@ -273,7 +263,7 @@ void *funcionHebra(void *arg){
     struct ArgumentoHebra *datosHebra;
     int nodoActualHebra;
     int numeroHebra;
-    struct Ruta *rutaHebra;
+    struct Ruta rutaHebra;
 
     datosHebra = (struct ArgumentoHebra *)arg;
 
@@ -292,26 +282,26 @@ void *funcionHebra(void *arg){
     return NULL;
 }
 
-void buscarMejorRuta(int nodoActual, struct Ruta *rutaActual, int numeroHebra){
+void buscarMejorRuta(int nodoActual, struct Ruta rutaActual, int numeroHebra){
     int i, nodoSiguiente, idNuevaHebra, cantidadHebras = 0;
     pthread_t hebras[MAX_NODOS];
     struct ArgumentoHebra *datosHebra;
 
     if(nodoActual < 1 || nodoActual > MAX_NODOS) return;
-    if(rutaActual->largo >= MAX_NODOS) return;
+    if(rutaActual.largo >= MAX_NODOS) return;
 
-    rutaActual->nodos[rutaActual.largo] = nodoActual;
-    rutaActual->largo++;
-    rutaActual->visitados[nodoActual - 1] = 1;
+    rutaActual.nodos[rutaActual.largo] = nodoActual;
+    rutaActual.largo++;
+    rutaActual.visitados[nodoActual - 1] = 1;
 
-    if(todosObligatoriosVisitados(rutaActual->visitados)){
-        imprimirRutaEncontrada(rutaActual, numeroHebra);
-        guardarMejorRuta(rutaActual, numeroHebra);
+    if(todosObligatoriosVisitados(rutaActual.visitados)){
+        imprimirRutaEncontrada(&rutaActual, numeroHebra);
+        guardarMejorRuta(&rutaActual, numeroHebra);
         return;
     }
     
     pthread_mutex_lock(&mutexMejorRuta);
-    if(hayMejorRuta == 1 && rutaActual->largo >= mejorRutaGlobal->largo){
+    if(hayMejorRuta == 1 && rutaActual.largo >= mejorRutaGlobal.largo){
         pthread_mutex_unlock(&mutexMejorRuta);
         return;
     }
@@ -321,7 +311,7 @@ void buscarMejorRuta(int nodoActual, struct Ruta *rutaActual, int numeroHebra){
         nodoSiguiente = grafo[nodoActual - 1][i];
 
         if(nodoSiguiente < 1 || nodoSiguiente > MAX_NODOS) continue;
-        if(rutaActual->visitados[nodoSiguiente - 1] == 1) continue;
+        if(rutaActual.visitados[nodoSiguiente - 1] == 1) continue;
 
         if(sem_trywait(&semHebras) == 0){
             datosHebra = malloc(sizeof(struct ArgumentoHebra));
@@ -355,10 +345,10 @@ void buscarMejorRuta(int nodoActual, struct Ruta *rutaActual, int numeroHebra){
 }
 
 void resolverMejorRuta(){
-    struct Ruta *rutaActual;
+    struct Ruta rutaActual;
 
-    inicializarRuta(rutaActual);
-    inicializarRuta(mejorRutaGlobal);
+    inicializarRuta(&rutaActual);
+    inicializarRuta(&mejorRutaGlobal);
 
     hayMejorRuta = 0;
     contadorHebras = 0;
