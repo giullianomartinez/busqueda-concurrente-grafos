@@ -244,7 +244,7 @@ void guardarMejorRuta(struct Ruta *actual, int numeroHebra){
 
         pthread_mutex_lock(&mutexImpresion);
 
-        printf("\nNUEVA MEJOR RUTA:\n[ID: %d | Hebras activas %d]\n",numeroHebra,hebrasActivasActuales);
+        printf("\n[ID: %d | Hebras activas %d]\nNUEVA MEJOR RUTA:\n",numeroHebra,hebrasActivasActuales);
 
         for(i = 0; i < mejorRutaGlobal.largo; i++){
             printf("%d", mejorRutaGlobal.nodos[i]);
